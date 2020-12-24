@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include <ctime>
 
 class ILogger
 {

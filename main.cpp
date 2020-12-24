@@ -4,7 +4,7 @@
 #include <ILogger.h>
 #include <sstream>
 
-#define THREADCOUNT 100
+#define THREADCOUNT 64
 CRITICAL_SECTION CriticalSection;
 
 struct MyData {
@@ -16,7 +16,6 @@ struct MyData {
 
 DWORD WINAPI MyThreadFunction(LPVOID lpParam) {
 	MyData* data = static_cast<MyData*>(lpParam);
-	EnterCriticalSection(&CriticalSection);
 	for (int i = 0; i < 10; ++i) {
 		std::ostringstream ss;
 		ss << std::this_thread::get_id();
@@ -25,9 +24,10 @@ DWORD WINAPI MyThreadFunction(LPVOID lpParam) {
 		data->functionName = __FUNCTION__;
 		data->message = "Some message";
 		std::string messageToLog = data->threadId + " " + data->functionName + " " + data->message;
+		EnterCriticalSection(&CriticalSection);
 		data->log.Write(messageToLog);
+		LeaveCriticalSection(&CriticalSection);
 	}
-	LeaveCriticalSection(&CriticalSection);
 	return 0;
 }
 
@@ -35,6 +35,7 @@ int main()
 {
 	Logger log;
 	MyData data = {"", "", "", log};
+	//const int threadCount = 100;
 	HANDLE hThr[THREADCOUNT] = {};
 	DWORD i, dwRet = 0;
 	WCHAR* Buf[THREADCOUNT] = {};
